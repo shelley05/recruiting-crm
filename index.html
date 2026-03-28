@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>1099 Recruiting CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#1c2128;--s3:#22272e;
+  --border:#30363d;--border2:#444c56;
+  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
+  --cyan:#39d3f7;--cyan-dim:#0d2d3a;
+  --green:#3fb950;--green-dim:#0d2a13;
+  --amber:#d29922;--amber-dim:#2a1f00;
+  --red:#f85149;--red-dim:#2a0d0d;
+  --purple:#bc8cff;--purple-dim:#1e1040;
+  --r:8px;--rl:12px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
+button{font-family:'IBM Plex Sans',sans-serif;cursor:pointer}
+input,textarea,select{font-family:'IBM Plex Sans',sans-serif}
+
+/* SETUP */
+#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.sw{max-width:480px;width:100%}
+.s-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan);border:1px solid var(--cyan-dim);background:var(--cyan-dim);padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:1.5rem}
+.s-title{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1.2;margin-bottom:8px}
+.s-sub{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:2rem}
+.field{margin-bottom:12px}
+.field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;transition:border-color 0.15s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--cyan)}
+.field textarea{resize:vertical;line-height:1.6}
+.btn-launch{width:100%;background:var(--cyan);color:#000;border:none;padding:12px;border-radius:var(--r);font-size:13px;font-weight:600;margin-top:8px;transition:opacity 0.15s}
+.btn-launch:hover{opacity:0.88}
+.s-note{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-align:center;margin-top:10px;line-height:1.7}
+
+/* APP SHELL */
+#app{display:none;height:100vh;display:none;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;flex-wrap:wrap;gap:8px}
+.tb-left{display:flex;align-items:center;gap:12px}
+.tb-logo{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--cyan)}
+.tb-name{font-size:14px;font-weight:600}
+.tb-right{display:flex;gap:6px;flex-wrap:wrap}
+.stat-chip{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--s2);border:1px solid var(--border);border-radius:99px;padding:4px 10px;color:var(--text2)}
+.stat-chip b{color:var(--text)}
+
+/* NAV */
+.nav{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;overflow-x:auto}
+.nav-btn{padding:10px 18px;font-size:12px;font-weight:500;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);white-space:nowrap;transition:all 0.15s}
+.nav-btn.on{color:var(--cyan);border-bottom-color:var(--cyan)}
+.nav-btn:hover:not(.on){color:var(--text)}
+.nav-badge{display:inline-block;background:var(--s3);border-radius:99px;padding:1px 6px;font-size:9px;font-family:'IBM Plex Mono',monospace;margin-left:5px}
+.nav-btn.on .nav-badge{background:var(--cyan-dim);color:var(--cyan)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:1.25rem}
+.tab-content{display:none}
+.tab-content.on{display:block}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:1.1rem 1.25rem;margin-bottom:10px}
+.card-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.card-title{font-size:14px;font-weight:600;letter-spacing:-0.01em}
+.card-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.meta-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.badge{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;border-radius:99px}
+.b-cyan{background:var(--cyan-dim);color:var(--cyan)}
+.b-green{background:var(--green-dim);color:var(--green)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}
+.b-red{background:var(--red-dim);color:var(--red)}
+.b-purple{background:var(--purple-dim);color:var(--purple)}
+.b-gray{background:var(--s3);color:var(--text2);border:1px solid var(--border)}
+.score-pill{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 10px;border-radius:99px;flex-shrink:0}
+.sp-hi{background:var(--green-dim);color:var(--green)}
+.sp-mid{background:var(--amber-dim);color:var(--amber)}
+.sp-lo{background:var(--red-dim);color:var(--red)}
+.desc{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* BUTTONS */
+.btn-primary{background:var(--cyan);color:#000;border:none;padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;transition:opacity 0.15s}
+.btn-primary:hover{opacity:0.85}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+.btn-green{background:var(--green);color:#000;border:none;padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;transition:opacity 0.15s}
+.btn-green:hover{opacity:0.85}
+.btn-outline{background:none;border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:var(--r);font-size:12px;transition:all 0.15s}
+.btn-outline:hover{background:var(--s2)}
+.btn-ghost{background:none;border:none;color:var(--text3);padding:6px 8px;font-size:12px;transition:color 0.15s}
+.btn-ghost:hover{color:var(--text2)}
+.btn-scan{background:var(--cyan);color:#000;border:none;padding:9px 20px;border-radius:var(--r);font-size:12px;font-weight:600;transition:opacity 0.15s;white-space:nowrap}
+.btn-scan:hover{opacity:0.88}
+.btn-scan:disabled{opacity:0.35;cursor:not-allowed}
+
+/* SEARCH BAR */
+.search-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem}
+.search-bar input,.search-bar select{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;color:var(--text);font-size:12px}
+.search-bar input{flex:1;min-width:140px}
+
+/* EXPANDABLE PANEL */
+.exp-panel{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-top:10px;display:none}
+.exp-panel.on{display:block}
+.exp-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.exp-content{font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word;min-height:40px}
+.exp-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.exp-tab{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s3);color:var(--text2);cursor:pointer;transition:all 0.15s}
+.exp-tab.on{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan)}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:1.5rem}
+.pipe-col{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:0.75rem}
+.pipe-head{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;justify-content:space-between}
+.pipe-count{color:var(--text2)}
+.pipe-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;margin-bottom:6px;font-size:12px}
+.pipe-name{font-weight:500;margin-bottom:2px}
+.pipe-role{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:1.5rem}
+.stat-box{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:1rem}
+.stat-n{font-size:26px;font-weight:600;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.02em}
+.stat-l{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;font-family:'IBM Plex Mono',monospace}
+
+/* FORM PANEL */
+.form-panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1.25rem}
+.form-panel h3{font-size:13px;font-weight:600;margin-bottom:1rem;color:var(--text2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-grid input,.form-grid select,.form-grid textarea{padding:8px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;width:100%}
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus{outline:none;border-color:var(--cyan)}
+.full{grid-column:1/-1}
+
+/* PBAR */
+.pbar-wrap{height:2px;background:var(--border);border-radius:2px;margin-bottom:1.25rem;display:none;overflow:hidden}
+.pbar{height:100%;width:0%;background:var(--cyan);border-radius:2px;transition:width 0.3s}
+
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:12px;line-height:1.8}
+.wait{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:600;color:var(--text2)}
+
+@media(max-width:640px){
+  .pipeline{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="sw">
+    <div class="s-badge">1099 Recruiting CRM</div>
+    <div class="s-title">Your recruiting business, automated.</div>
+    <div class="s-sub">Find IT job orders from agencies, source candidates, generate outreach for every channel, and track your pipeline — all in one place.</div>
+    <div class="field"><label>Anthropic API Key</label><input type="password" id="sk" placeholder="sk-ant-..."/></div>
+    <div class="field"><label>Your Name</label><input type="text" id="rname" placeholder="e.g. Jane Smith"/></div>
+    <div class="field"><label>Your Email</label><input type="text" id="remail" placeholder="jane@gmail.com"/></div>
+    <div class="field"><label>Phone / Google Voice</label><input type="text" id="rphone" placeholder="214-555-1234"/></div>
+    <div class="field"><label>LinkedIn URL</label><input type="text" id="rlinkedin" placeholder="linkedin.com/in/yourprofile"/></div>
+    <div class="field"><label>Your Recruiting Specialty</label><textarea id="rspec" rows="3" placeholder="e.g. IT staffing — Scrum Masters, Project Managers, DevOps, cloud roles. 15 years experience placing candidates with Fortune 500 companies."></textarea></div>
+    <button class="btn-launch" onclick="launch()">Launch CRM →</button>
+    <div class="s-note">All data stays in your browser. ~$0.01 per AI action.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;height:100vh;flex-direction:column">
+  <div class="topbar">
+    <div class="tb-left">
+      <div>
+        <div class="tb-logo">1099 Recruiting CRM</div>
+        <div class="tb-name" id="tb-name">Dashboard</div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="stat-chip">Job Orders: <b id="hc-orders">0</b></div>
+      <div class="stat-chip">Candidates: <b id="hc-cands">0</b></div>
+      <div class="stat-chip">Submitted: <b id="hc-submitted">0</b></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn on" onclick="showTab('orders',this)">Job Orders <span class="nav-badge" id="nb-orders">0</span></button>
+    <button class="nav-btn" onclick="showTab('source',this)">Source Candidates <span class="nav-badge" id="nb-source">0</span></button>
+    <button class="nav-btn" onclick="showTab('pipeline',this)">Pipeline <span class="nav-badge" id="nb-pipeline">0</span></button>
+    <button class="nav-btn" onclick="showTab('outreach',this)">Outreach</button>
+    <button class="nav-btn" onclick="showTab('screen',this)">Screening</button>
+  </div>
+
+  <div class="main">
+
+    <!-- JOB ORDERS -->
+    <div class="tab-content on" id="tab-orders">
+
+      <!-- MANUAL ADD -->
+      <div class="section-head">
+        <div class="section-title">Add a job order manually</div>
+        <button class="btn-outline" onclick="toggleManualOrder()" id="toggle-manual-btn">+ Add Order</button>
+      </div>
+      <div id="manual-order-form" style="display:none;" class="form-panel">
+        <div class="form-grid">
+          <input type="text" id="mo-agency" placeholder="Agency name"/>
+          <input type="text" id="mo-role" placeholder="Role title e.g. Sr. Scrum Master"/>
+          <input type="text" id="mo-location" placeholder="Location / Remote"/>
+          <input type="text" id="mo-payrate" placeholder="Pay rate e.g. $85-95/hr"/>
+          <input type="text" id="mo-fee" placeholder="Placement fee e.g. 18%"/>
+          <input type="text" id="mo-duration" placeholder="Duration e.g. 6 month contract"/>
+          <input type="text" id="mo-contact" placeholder="Contact email"/>
+          <select id="mo-urgency"><option value="high">High urgency</option><option value="medium" selected>Medium urgency</option><option value="low">Low urgency</option></select>
+          <input type="text" id="mo-reqs" placeholder="Key requirements" class="full"/>
+          <textarea id="mo-desc" placeholder="Job description / notes" rows="3" class="full"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary" onclick="addManualOrder()">Add Job Order</button>
+          <button class="btn-outline" onclick="toggleManualOrder()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- AI SCAN -->
+      <div class="section-head" style="margin-top:1rem;">
+        <div class="section-title">Or scan for job orders with AI</div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="o-role" placeholder="IT role type..." value="Scrum Master, Project Manager, DevOps"/>
+        <input type="text" id="o-location" placeholder="Location..." value="Dallas TX / Remote"/>
+        <select id="o-count"><option value="5" selected>5 orders</option><option value="10">10 orders</option></select>
+        <button class="btn-scan" id="o-btn" onclick="findOrders()">Find Job Orders</button>
+      </div>
+      <div class="pbar-wrap" id="o-pbar-wrap"><div class="pbar" id="o-pbar"></div></div>
+      <div id="order-list">
+        <div class="empty">Add a job order manually above, or click <strong>Find Job Orders</strong> to scan with AI.</div>
+      </div>
+    </div>
+
+    <!-- SOURCE CANDIDATES -->
+    <div class="tab-content" id="tab-source">
+      <div class="form-panel">
+        <h3>Source candidates for a job order</h3>
+        <div class="form-grid">
+          <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">Job Title</label><input type="text" id="src-title" placeholder="e.g. Sr. Scrum Master"/></div>
+          <div><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">Location</label><input type="text" id="src-location" placeholder="Dallas TX / Remote"/></div>
+          <div class="full"><label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">Key Requirements</label><input type="text" id="src-reqs" placeholder="e.g. 5+ yrs Scrum, SAFe certified, fintech experience"/></div>
+        </div>
+        <button class="btn-scan" id="src-btn" onclick="sourceCandidates()">Generate Sourcing Strategy</button>
+      </div>
+      <div class="pbar-wrap" id="src-pbar-wrap"><div class="pbar" id="src-pbar"></div></div>
+      <div id="source-results"></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="tab-content" id="tab-pipeline">
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-n" id="ps-sourced">0</div><div class="stat-l">Sourced</div></div>
+        <div class="stat-box"><div class="stat-n" id="ps-contacted">0</div><div class="stat-l">Contacted</div></div>
+        <div class="stat-box"><div class="stat-n" id="ps-screened">0</div><div class="stat-l">Screened</div></div>
+        <div class="stat-box"><div class="stat-n" id="ps-submitted">0</div><div class="stat-l">Submitted</div></div>
+      </div>
+      <div class="pipeline" id="pipeline-board">
+        <div class="pipe-col"><div class="pipe-head">Sourced <span class="pipe-count" id="pc-sourced">0</span></div><div id="pl-sourced"></div></div>
+        <div class="pipe-col"><div class="pipe-head">Contacted <span class="pipe-count" id="pc-contacted">0</span></div><div id="pl-contacted"></div></div>
+        <div class="pipe-col"><div class="pipe-head">Screened <span class="pipe-count" id="pc-screened">0</span></div><div id="pl-screened"></div></div>
+        <div class="pipe-col"><div class="pipe-head">Interviewed <span class="pipe-count" id="pc-interviewed">0</span></div><div id="pl-interviewed"></div></div>
+        <div class="pipe-col"><div class="pipe-head">Submitted <span class="pipe-count" id="pc-submitted">0</span></div><div id="pl-submitted"></div></div>
+      </div>
+      <div class="section-head">
+        <div class="section-title">All Candidates</div>
+        <button class="btn-outline" onclick="showAddCandidate()">+ Add Candidate</button>
+      </div>
+      <div id="add-candidate-form" style="display:none;" class="form-panel">
+        <div class="form-grid">
+          <input type="text" id="c-name" placeholder="Full name"/>
+          <input type="text" id="c-title" placeholder="Current title"/>
+          <input type="text" id="c-email" placeholder="Email"/>
+          <input type="text" id="c-phone" placeholder="Phone"/>
+          <input type="text" id="c-location" placeholder="Location"/>
+          <input type="text" id="c-linkedin" placeholder="LinkedIn URL"/>
+          <input type="text" id="c-salary" placeholder="Salary expectation"/>
+          <select id="c-status">
+            <option>sourced</option><option>contacted</option><option>screened</option><option>interviewed</option><option>submitted</option>
+          </select>
+          <input type="text" id="c-role" placeholder="Target role / job order" class="full"/>
+        </div>
+        <button class="btn-primary" onclick="addCandidate()">Add to Pipeline</button>
+      </div>
+      <div id="candidate-list"><div class="empty">No candidates yet. Source some or add manually.</div></div>
+    </div>
+
+    <!-- OUTREACH -->
+    <div class="tab-content" id="tab-outreach">
+      <div class="form-panel">
+        <h3>Generate outreach for a candidate</h3>
+        <div class="form-grid">
+          <input type="text" id="out-cname" placeholder="Candidate name"/>
+          <input type="text" id="out-ctitle" placeholder="Candidate current title"/>
+          <input type="text" id="out-role" placeholder="Role you're pitching"/>
+          <input type="text" id="out-company" placeholder="Agency / end client"/>
+          <input type="text" id="out-location" placeholder="Location / remote"/>
+          <input type="text" id="out-pay" placeholder="Pay rate / salary range"/>
+        </div>
+        <button class="btn-scan" id="out-btn" onclick="genOutreach()">Generate All Outreach ↗</button>
+      </div>
+      <div class="pbar-wrap" id="out-pbar-wrap"><div class="pbar" id="out-pbar"></div></div>
+      <div id="outreach-results"></div>
+    </div>
+
+    <!-- SCREENING -->
+    <div class="tab-content" id="tab-screen">
+      <div class="form-panel">
+        <h3>Generate screening kit for a role</h3>
+        <div class="form-grid">
+          <input type="text" id="scr-role" placeholder="Role title e.g. Sr. DevOps Engineer"/>
+          <input type="text" id="scr-reqs" placeholder="Key requirements"/>
+          <input type="text" id="scr-industry" placeholder="Industry e.g. Fintech, Healthcare"/>
+          <input type="text" id="scr-payrate" placeholder="Pay rate / salary"/>
+        </div>
+        <button class="btn-scan" id="scr-btn" onclick="genScreening()">Generate Screening Kit ↗</button>
+      </div>
+      <div class="pbar-wrap" id="scr-pbar-wrap"><div class="pbar" id="scr-pbar"></div></div>
+      <div id="screen-results"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const R = { key:'', name:'', email:'', phone:'', linkedin:'', spec:'', orders:[], candidates:[], pitches:{} };
+
+function launch() {
+  const key = document.getElementById('sk').value.trim();
+  if (!key.startsWith('sk-ant-')) { alert('Enter a valid API key (starts with sk-ant-)'); return; }
+  R.key = key;
+  R.name = document.getElementById('rname').value.trim();
+  R.email = document.getElementById('remail').value.trim();
+  R.phone = document.getElementById('rphone').value.trim();
+  R.linkedin = document.getElementById('rlinkedin').value.trim();
+  R.spec = document.getElementById('rspec').value.trim();
+  document.getElementById('setup').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  document.getElementById('tb-name').textContent = (R.name||'Recruiter') + "'s CRM";
+}
+
+function showTab(t, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + t).classList.add('on');
+  btn.classList.add('on');
+}
+
+async function claude(prompt, maxTokens=900) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':R.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'API error '+res.status); }
+  const d = await res.json();
+  return (d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+}
+
+function pbar(id, pct) { document.getElementById(id).style.width=pct+'%'; }
+
+function ticker(id) {
+  let p=10; document.getElementById(id+'wrap').style.display='block'; pbar(id,10);
+  const t = setInterval(()=>{ if(p<88){p+=2;pbar(id,p);} },400);
+  return t;
+}
+
+function tickerStop(t,id) {
+  clearInterval(t); pbar(id,100);
+  setTimeout(()=>{ document.getElementById(id+'wrap').style.display='none'; pbar(id,0); },500);
+}
+
+// ─── MANUAL ORDER ───
+function toggleManualOrder() {
+  const f = document.getElementById('manual-order-form');
+  const btn = document.getElementById('toggle-manual-btn');
+  const visible = f.style.display !== 'none';
+  f.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '+ Add Order' : '× Cancel';
+}
+
+function addManualOrder() {
+  const agency = document.getElementById('mo-agency').value;
+  const role = document.getElementById('mo-role').value;
+  if (!agency || !role) { alert('Enter agency name and role.'); return; }
+  const order = {
+    id: 'o' + Date.now(),
+    agency, role,
+    agencyType: 'Staffing Agency',
+    location: document.getElementById('mo-location').value || 'Remote',
+    payRate: document.getElementById('mo-payrate').value || 'TBD',
+    placementFee: document.getElementById('mo-fee').value || 'TBD',
+    duration: document.getElementById('mo-duration').value || 'Contract',
+    contactEmail: document.getElementById('mo-contact').value,
+    urgency: document.getElementById('mo-urgency').value,
+    requirements: document.getElementById('mo-reqs').value,
+    description: document.getElementById('mo-desc').value,
+    posted: 'Just added',
+    score: 90,
+    manual: true
+  };
+  R.orders.unshift(order);
+  // Clear form
+  ['mo-agency','mo-role','mo-location','mo-payrate','mo-fee','mo-duration','mo-contact','mo-reqs','mo-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mo-urgency').value = 'medium';
+  toggleManualOrder();
+  document.getElementById('nb-orders').textContent = R.orders.length;
+  document.getElementById('hc-orders').textContent = R.orders.length;
+  renderOrders();
+}
+
+// ─── JOB ORDERS ───
+async function findOrders() {
+  const role = document.getElementById('o-role').value||'Scrum Master';
+  const loc = document.getElementById('o-location').value||'Dallas TX';
+  const count = document.getElementById('o-count').value;
+  const btn = document.getElementById('o-btn');
+  btn.disabled=true; btn.textContent='Searching...';
+  document.getElementById('order-list').innerHTML='<div class="empty"><div class="wait">Finding agencies with open job orders...</div></div>';
+  const t = ticker('o-pbar-');
+  try {
+    const raw = await claude(
+      'Return ONLY a JSON array of '+count+' realistic IT staffing agency job orders for a 1099 recruiter to fill. Roles: "'+role+'". Location: "'+loc+'". Each: {"id":"o1","agency":"","agencyType":"staffing agency","role":"","location":"","duration":"6 month contract","payRate":"$80-95/hr","placementFee":"18% of annual salary","requirements":"","description":"2 sentences.","urgency":"high","posted":"2 days ago","contactEmail":"recruiter@agency.com","score":85}. No markdown.',
+      1100
+    );
+    tickerStop(t,'o-pbar-');
+    let orders=[];
+    try{orders=JSON.parse(raw);}catch(e){const m=raw.match(/\[[\s\S]*\]/);if(m)try{orders=JSON.parse(m[0]);}catch(e2){}}
+    orders=orders.filter(o=>o&&o.agency&&o.role);
+    if(!orders.length){document.getElementById('order-list').innerHTML='<div class="empty">Could not parse results — try again.</div>';return;}
+    R.orders=orders;
+    document.getElementById('nb-orders').textContent=orders.length;
+    document.getElementById('hc-orders').textContent=orders.length;
+    renderOrders();
+  } catch(e) {
+    tickerStop(t,'o-pbar-');
+    document.getElementById('order-list').innerHTML='<div class="empty">Error: '+e.message+'</div>';
+  }
+  btn.disabled=false; btn.textContent='Find Job Orders';
+}
+
+function removeOrder(id) {
+  R.orders = R.orders.filter(o => o.id !== id);
+  document.getElementById('nb-orders').textContent = R.orders.length;
+  document.getElementById('hc-orders').textContent = R.orders.length;
+  renderOrders();
+}
+
+function renderOrders() {
+  const el = document.getElementById('order-list');
+  if(!R.orders.length){el.innerHTML='<div class="empty">No job orders yet.</div>';return;}
+  el.innerHTML = R.orders.map(o=>{
+    const sc=(o.score||70)>=80?'sp-hi':(o.score||70)>=60?'sp-mid':'sp-lo';
+    const urg=o.urgency==='high'?'b-red':o.urgency==='medium'?'b-amber':'b-gray';
+    return `<div class="card">
+      <div class="card-row">
+        <div><div class="card-title">${o.role}</div><div class="card-sub">${o.agency} · ${o.agencyType||'Staffing Agency'}</div></div>
+        <div class="score-pill ${sc}">${o.score||70}% match</div>
+      </div>
+      <div class="meta-row">
+        <span class="badge b-cyan">${o.payRate||'Competitive'}</span>
+        <span class="badge b-green">${o.placementFee||'Commission'}</span>
+        <span class="badge b-gray">${o.location||'Remote'}</span>
+        <span class="badge b-gray">${o.duration||'Contract'}</span>
+        <span class="badge ${urg}">Urgency: ${o.urgency||'normal'}</span>
+        <span class="badge b-gray">${o.posted||'Recent'}</span>
+      </div>
+      <div class="desc">${o.description||''}</div>
+      <div class="desc" style="color:var(--text3);font-size:11px;margin-bottom:10px;">Requirements: ${o.requirements||'See description'}</div>
+      <div class="actions">
+        <button class="btn-primary" onclick="fillSource('${o.role.replace(/'/g,"\\'")}','${o.location?o.location.replace(/'/g,"\\'"):''}','${o.requirements?o.requirements.replace(/'/g,"\\'"):''}')">Source Candidates</button>
+        <button class="btn-outline" onclick="fillOutreach('','','${o.role.replace(/'/g,"\\'")}','${o.agency.replace(/'/g,"\\'")}','${o.location?o.location.replace(/'/g,"\\'"):''}','${o.payRate?o.payRate.replace(/'/g,"\\'"):''}')">Write Outreach</button>
+        <button class="btn-outline" onclick="fillScreening('${o.role.replace(/'/g,"\\'")}','${o.requirements?o.requirements.replace(/'/g,"\\'"):''}','','${o.payRate?o.payRate.replace(/'/g,"\\'"):''}')">Screening Kit</button>
+        ${o.contactEmail?`<a href="mailto:${o.contactEmail}" style="font-size:11px;color:var(--cyan);text-decoration:none;">${o.contactEmail}</a>`:''}
+        <button class="btn-ghost" onclick="removeOrder('${o.id}')">× Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── SOURCE CANDIDATES ───
+async function sourceCandidates() {
+  const title=document.getElementById('src-title').value;
+  const loc=document.getElementById('src-location').value;
+  const reqs=document.getElementById('src-reqs').value;
+  if(!title){alert('Enter a job title.');return;}
+  const btn=document.getElementById('src-btn');
+  btn.disabled=true; btn.textContent='Generating...';
+  document.getElementById('source-results').innerHTML='<div class="empty"><div class="wait">Building sourcing strategy...</div></div>';
+  const t=ticker('src-pbar-');
+  try {
+    const result = await claude(
+      'You are an expert IT recruiter. Create a sourcing strategy for: "'+title+'" in "'+loc+'". Requirements: '+reqs+'. Include:\n1. BOOLEAN SEARCH STRINGS (3 variations for LinkedIn, Indeed, Google)\n2. WHERE TO LOOK (specific communities, groups, forums, job boards)\n3. PASSIVE CANDIDATE SIGNALS (what to look for on profiles)\n4. OUTREACH TIMING (best days/times)\n5. 5 SAMPLE CANDIDATE PROFILES that would fit this role (name, current title, likely location, why they fit)\n\nBe specific and actionable.',
+      900
+    );
+    tickerStop(t,'src-pbar-');
+    document.getElementById('nb-source').textContent='✓';
+    document.getElementById('source-results').innerHTML=`
+      <div class="card">
+        <div class="exp-label">Sourcing Strategy — ${title}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word;">${result}</div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn-outline" onclick="copyText(this,'${encodeURIComponent(result)}')">Copy strategy</button>
+          <button class="btn-outline" onclick="openSearch('linkedin','${encodeURIComponent(title)}','${encodeURIComponent(loc)}')">Search LinkedIn ↗</button>
+          <button class="btn-outline" onclick="openSearch('indeed','${encodeURIComponent(title)}','${encodeURIComponent(loc)}')">Search Indeed ↗</button>
+          <button class="btn-outline" onclick="openSearch('google','${encodeURIComponent(title)}','${encodeURIComponent(loc)}')">Google X-Ray ↗</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    tickerStop(t,'src-pbar-');
+    document.getElementById('source-results').innerHTML='<div class="empty">Error: '+e.message+'</div>';
+  }
+  btn.disabled=false; btn.textContent='Generate Sourcing Strategy';
+}
+
+function openSearch(platform, title, loc) {
+  const t=decodeURIComponent(title), l=decodeURIComponent(loc);
+  let url;
+  if(platform==='linkedin') url='https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(t)+' '+encodeURIComponent(l)+'&origin=GLOBAL_SEARCH_HEADER';
+  else if(platform==='indeed') url='https://www.indeed.com/resumes?q='+encodeURIComponent(t)+'&l='+encodeURIComponent(l);
+  else url='https://www.google.com/search?q=site:linkedin.com/in+'+encodeURIComponent('"'+t+'"')+'+'+encodeURIComponent(l);
+  window.open(url,'_blank');
+}
+
+// ─── OUTREACH ───
+async function genOutreach() {
+  const cname=document.getElementById('out-cname').value||'the candidate';
+  const ctitle=document.getElementById('out-ctitle').value||'IT professional';
+  const role=document.getElementById('out-role').value;
+  const company=document.getElementById('out-company').value||'our client';
+  const loc=document.getElementById('out-location').value||'Remote';
+  const pay=document.getElementById('out-pay').value||'competitive';
+  if(!role){alert('Enter the role you are pitching.');return;}
+  const btn=document.getElementById('out-btn');
+  btn.disabled=true; btn.textContent='Generating...';
+  document.getElementById('outreach-results').innerHTML='<div class="empty"><div class="wait">Writing outreach messages...</div></div>';
+  const t=ticker('out-pbar-');
+  try {
+    const result = await claude(
+      'You are '+R.name+', a 1099 IT recruiter. Write outreach for '+cname+' ('+ctitle+') for a "'+role+'" role at '+company+' in '+loc+'. Pay: '+pay+'.\n\nWrite 4 versions:\n\n[LINKEDIN MESSAGE] (under 300 chars — short and punchy)\n\n[EMAIL SUBJECT] + [EMAIL BODY] (under 150 words, personal, no clichés)\n\n[SMS] (under 160 chars)\n\n[CALL SCRIPT] (30 second voicemail script)\n\nAll should feel human and specific, not templated.',
+      700
+    );
+    tickerStop(t,'out-pbar-');
+
+    // Parse into sections
+    const sections = [
+      {key:'LINKEDIN MESSAGE',label:'LinkedIn Message',icon:'💼'},
+      {key:'EMAIL',label:'Email',icon:'📧'},
+      {key:'SMS',label:'SMS',icon:'📱'},
+      {key:'CALL SCRIPT',label:'Call Script',icon:'📞'}
+    ];
+
+    document.getElementById('outreach-results').innerHTML=`
+      <div class="card">
+        <div class="card-row"><div><div class="card-title">${cname} — ${role}</div><div class="card-sub">${company} · ${loc} · ${pay}</div></div></div>
+        <div class="exp-tabs">
+          ${sections.map((s,i)=>`<span class="exp-tab${i===0?' on':''}" onclick="switchOutreachTab(this,'ot-${i}')">${s.icon} ${s.label}</span>`).join('')}
+        </div>
+        ${sections.map((s,i)=>{
+          const regex=new RegExp('\\['+s.key+'(?:[^\\]]*)?\\]([\\s\\S]*?)(?=\\[|$)');
+          const match=result.match(regex);
+          const content=match?match[1].trim():result;
+          return `<div id="ot-${i}" style="display:${i===0?'block':'none'}">
+            <div style="font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word;background:var(--s2);border-radius:var(--r);padding:1rem;margin-bottom:10px;">${content}</div>
+            <button class="btn-outline" style="font-size:11px;" onclick="copyRaw(this,\`${content.replace(/`/g,'\\`')}\`)">Copy</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    tickerStop(t,'out-pbar-');
+    document.getElementById('outreach-results').innerHTML='<div class="empty">Error: '+e.message+'</div>';
+  }
+  btn.disabled=false; btn.textContent='Generate All Outreach ↗';
+}
+
+function switchOutreachTab(btn, id) {
+  btn.closest('.card').querySelectorAll('.exp-tab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  btn.closest('.card').querySelectorAll('[id^="ot-"]').forEach(el=>el.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+// ─── SCREENING ───
+async function genScreening() {
+  const role=document.getElementById('scr-role').value;
+  const reqs=document.getElementById('scr-reqs').value;
+  const industry=document.getElementById('scr-industry').value||'IT';
+  const pay=document.getElementById('scr-payrate').value;
+  if(!role){alert('Enter the role.');return;}
+  const btn=document.getElementById('scr-btn');
+  btn.disabled=true; btn.textContent='Generating...';
+  document.getElementById('screen-results').innerHTML='<div class="empty"><div class="wait">Building screening kit...</div></div>';
+  const t=ticker('scr-pbar-');
+  try {
+    const result = await claude(
+      'Create a complete recruiter screening kit for a "'+role+'" role. Requirements: '+reqs+'. Industry: '+industry+'. Pay: '+pay+'.\n\nInclude:\n1. MUST-HAVE CHECKLIST (5 items to verify before submitting)\n2. PHONE SCREEN QUESTIONS (8 questions with what to listen for)\n3. RED FLAGS (5 warning signs)\n4. SUBMISSION NOTES TEMPLATE (fill-in format for submitting to agency)\n5. INTERVIEW PREP EMAIL (to send candidate before client interview)\n\nBe specific to this role.',
+      900
+    );
+    tickerStop(t,'scr-pbar-');
+    document.getElementById('screen-results').innerHTML=`
+      <div class="card">
+        <div class="card-row"><div><div class="card-title">Screening Kit — ${role}</div><div class="card-sub">${industry} · ${pay||'Rate TBD'}</div></div></div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word;">${result}</div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn-outline" onclick="copyRaw(this,\`${result.replace(/`/g,'\\`')}\`)">Copy full kit</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    tickerStop(t,'scr-pbar-');
+    document.getElementById('screen-results').innerHTML='<div class="empty">Error: '+e.message+'</div>';
+  }
+  btn.disabled=false; btn.textContent='Generate Screening Kit ↗';
+}
+
+// ─── PIPELINE ───
+function showAddCandidate() {
+  const f=document.getElementById('add-candidate-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function addCandidate() {
+  const c={
+    id:'c'+Date.now(),
+    name:document.getElementById('c-name').value,
+    title:document.getElementById('c-title').value,
+    email:document.getElementById('c-email').value,
+    phone:document.getElementById('c-phone').value,
+    location:document.getElementById('c-location').value,
+    linkedin:document.getElementById('c-linkedin').value,
+    salary:document.getElementById('c-salary').value,
+    status:document.getElementById('c-status').value,
+    role:document.getElementById('c-role').value,
+    date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})
+  };
+  if(!c.name){alert('Enter candidate name.');return;}
+  R.candidates.push(c);
+  ['c-name','c-title','c-email','c-phone','c-location','c-linkedin','c-salary','c-role'].forEach(id=>document.getElementById(id).value='');
+  updateHeaderStats();
+  renderPipeline();
+  renderCandidateList();
+}
+
+function updateStatus(id, val) {
+  const c=R.candidates.find(x=>x.id===id);
+  if(c){c.status=val; updateHeaderStats(); renderPipeline(); renderCandidateList();}
+}
+
+function removeCandidate(id) {
+  R.candidates=R.candidates.filter(x=>x.id!==id);
+  updateHeaderStats(); renderPipeline(); renderCandidateList();
+}
+
+function renderPipeline() {
+  const stages=['sourced','contacted','screened','interviewed','submitted'];
+  stages.forEach(s=>{
+    const cands=R.candidates.filter(c=>c.status===s);
+    document.getElementById('pc-'+s).textContent=cands.length;
+    document.getElementById('ps-'+s)||null;
+    const el=document.getElementById('pl-'+s);
+    if(el) el.innerHTML=cands.length
+      ?cands.map(c=>`<div class="pipe-card"><div class="pipe-name">${c.name}</div><div class="pipe-role">${c.role||c.title}</div></div>`).join('')
+      :`<div style="font-size:11px;color:var(--text3);padding:6px 0;">Empty</div>`;
+  });
+  // Update stat boxes
+  ['sourced','contacted','screened','submitted'].forEach(s=>{
+    const el=document.getElementById('ps-'+s);
+    if(el) el.textContent=R.candidates.filter(c=>c.status===s).length;
+  });
+  document.getElementById('nb-pipeline').textContent=R.candidates.length;
+}
+
+function renderCandidateList() {
+  const el=document.getElementById('candidate-list');
+  if(!R.candidates.length){el.innerHTML='<div class="empty">No candidates yet.</div>';return;}
+  el.innerHTML=R.candidates.map(c=>`
+    <div class="card">
+      <div class="card-row">
+        <div><div class="card-title">${c.name}</div><div class="card-sub">${c.title||''}${c.location?' · '+c.location:''}</div></div>
+        <span class="badge b-${statusColor(c.status)}">${c.status}</span>
+      </div>
+      <div class="meta-row">
+        ${c.role?`<span class="badge b-cyan">${c.role}</span>`:''}
+        ${c.salary?`<span class="badge b-green">${c.salary}</span>`:''}
+        ${c.email?`<span class="badge b-gray">${c.email}</span>`:''}
+        ${c.phone?`<span class="badge b-gray">${c.phone}</span>`:''}
+      </div>
+      <div class="actions">
+        <select class="btn-outline" style="font-size:11px;padding:5px 8px;" onchange="updateStatus('${c.id}',this.value)">
+          ${['sourced','contacted','screened','interviewed','submitted'].map(s=>`<option value="${s}"${c.status===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn-outline" style="font-size:11px;" onclick="quickOutreach('${c.name.replace(/'/g,"\\'")}','${(c.title||'').replace(/'/g,"\\'")}','${(c.role||'').replace(/'/g,"\\'")}')">Outreach ↗</button>
+        ${c.linkedin?`<a href="https://${c.linkedin}" target="_blank" style="font-size:11px;color:var(--cyan);text-decoration:none;">LinkedIn ↗</a>`:''}
+        ${c.email?`<a href="mailto:${c.email}" style="font-size:11px;color:var(--cyan);text-decoration:none;">Email ↗</a>`:''}
+        <button class="btn-ghost" onclick="removeCandidate('${c.id}')">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function statusColor(s){return{sourced:'gray',contacted:'cyan',screened:'purple',interviewed:'amber',submitted:'green'}[s]||'gray';}
+
+function updateHeaderStats() {
+  const sub=R.candidates.filter(c=>c.status==='submitted').length;
+  document.getElementById('hc-cands').textContent=R.candidates.length;
+  document.getElementById('hc-submitted').textContent=sub;
+  renderPipeline();
+}
+
+// ─── HELPERS ───
+function fillSource(role,loc,reqs) {
+  document.getElementById('src-title').value=role;
+  document.getElementById('src-location').value=loc;
+  document.getElementById('src-reqs').value=reqs;
+  showTab('source',document.querySelectorAll('.nav-btn')[1]);
+}
+
+function fillOutreach(cname,ctitle,role,company,loc,pay) {
+  document.getElementById('out-cname').value=cname;
+  document.getElementById('out-ctitle').value=ctitle;
+  document.getElementById('out-role').value=role;
+  document.getElementById('out-company').value=company;
+  document.getElementById('out-location').value=loc;
+  document.getElementById('out-pay').value=pay;
+  showTab('outreach',document.querySelectorAll('.nav-btn')[3]);
+}
+
+function fillScreening(role,reqs,industry,pay) {
+  document.getElementById('scr-role').value=role;
+  document.getElementById('scr-reqs').value=reqs;
+  document.getElementById('scr-industry').value=industry;
+  document.getElementById('scr-payrate').value=pay;
+  showTab('screen',document.querySelectorAll('.nav-btn')[4]);
+}
+
+function quickOutreach(name,title,role) {
+  fillOutreach(name,title,role,'','','');
+  showTab('outreach',document.querySelectorAll('.nav-btn')[3]);
+}
+
+function copyText(btn,encoded) {
+  navigator.clipboard.writeText(decodeURIComponent(encoded));
+  btn.textContent='Copied!';
+  setTimeout(()=>btn.textContent='Copy strategy',1500);
+}
+
+function copyRaw(btn,text) {
+  navigator.clipboard.writeText(text);
+  btn.textContent='Copied!';
+  setTimeout(()=>btn.textContent='Copy',1500);
+}
+</script>
+</body>
+</html>
