@@ -194,6 +194,35 @@ input,textarea,select{font-family:'IBM Plex Sans',sans-serif}
 
     <!-- JOB ORDERS -->
     <div class="tab-content on" id="tab-orders">
+
+      <!-- MANUAL ADD -->
+      <div class="section-head">
+        <div class="section-title">Add a job order manually</div>
+        <button class="btn-outline" onclick="toggleManualOrder()" id="toggle-manual-btn">+ Add Order</button>
+      </div>
+      <div id="manual-order-form" style="display:none;" class="form-panel">
+        <div class="form-grid">
+          <input type="text" id="mo-agency" placeholder="Agency name"/>
+          <input type="text" id="mo-role" placeholder="Role title e.g. Sr. Scrum Master"/>
+          <input type="text" id="mo-location" placeholder="Location / Remote"/>
+          <input type="text" id="mo-payrate" placeholder="Pay rate e.g. $85-95/hr"/>
+          <input type="text" id="mo-fee" placeholder="Placement fee e.g. 18%"/>
+          <input type="text" id="mo-duration" placeholder="Duration e.g. 6 month contract"/>
+          <input type="text" id="mo-contact" placeholder="Contact email"/>
+          <select id="mo-urgency"><option value="high">High urgency</option><option value="medium" selected>Medium urgency</option><option value="low">Low urgency</option></select>
+          <input type="text" id="mo-reqs" placeholder="Key requirements" class="full"/>
+          <textarea id="mo-desc" placeholder="Job description / notes" rows="3" class="full"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary" onclick="addManualOrder()">Add Job Order</button>
+          <button class="btn-outline" onclick="toggleManualOrder()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- AI SCAN -->
+      <div class="section-head" style="margin-top:1rem;">
+        <div class="section-title">Or scan for job orders with AI</div>
+      </div>
       <div class="search-bar">
         <input type="text" id="o-role" placeholder="IT role type..." value="Scrum Master, Project Manager, DevOps"/>
         <input type="text" id="o-location" placeholder="Location..." value="Dallas TX / Remote"/>
@@ -202,7 +231,7 @@ input,textarea,select{font-family:'IBM Plex Sans',sans-serif}
       </div>
       <div class="pbar-wrap" id="o-pbar-wrap"><div class="pbar" id="o-pbar"></div></div>
       <div id="order-list">
-        <div class="empty">Click <strong>Find Job Orders</strong> to discover agencies with open IT positions you can fill as a 1099 recruiter.</div>
+        <div class="empty">Add a job order manually above, or click <strong>Find Job Orders</strong> to scan with AI.</div>
       </div>
     </div>
 
@@ -345,6 +374,45 @@ function tickerStop(t,id) {
   setTimeout(()=>{ document.getElementById(id+'wrap').style.display='none'; pbar(id,0); },500);
 }
 
+// ─── MANUAL ORDER ───
+function toggleManualOrder() {
+  const f = document.getElementById('manual-order-form');
+  const btn = document.getElementById('toggle-manual-btn');
+  const visible = f.style.display !== 'none';
+  f.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '+ Add Order' : '× Cancel';
+}
+
+function addManualOrder() {
+  const agency = document.getElementById('mo-agency').value;
+  const role = document.getElementById('mo-role').value;
+  if (!agency || !role) { alert('Enter agency name and role.'); return; }
+  const order = {
+    id: 'o' + Date.now(),
+    agency, role,
+    agencyType: 'Staffing Agency',
+    location: document.getElementById('mo-location').value || 'Remote',
+    payRate: document.getElementById('mo-payrate').value || 'TBD',
+    placementFee: document.getElementById('mo-fee').value || 'TBD',
+    duration: document.getElementById('mo-duration').value || 'Contract',
+    contactEmail: document.getElementById('mo-contact').value,
+    urgency: document.getElementById('mo-urgency').value,
+    requirements: document.getElementById('mo-reqs').value,
+    description: document.getElementById('mo-desc').value,
+    posted: 'Just added',
+    score: 90,
+    manual: true
+  };
+  R.orders.unshift(order);
+  // Clear form
+  ['mo-agency','mo-role','mo-location','mo-payrate','mo-fee','mo-duration','mo-contact','mo-reqs','mo-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mo-urgency').value = 'medium';
+  toggleManualOrder();
+  document.getElementById('nb-orders').textContent = R.orders.length;
+  document.getElementById('hc-orders').textContent = R.orders.length;
+  renderOrders();
+}
+
 // ─── JOB ORDERS ───
 async function findOrders() {
   const role = document.getElementById('o-role').value||'Scrum Master';
@@ -375,6 +443,13 @@ async function findOrders() {
   btn.disabled=false; btn.textContent='Find Job Orders';
 }
 
+function removeOrder(id) {
+  R.orders = R.orders.filter(o => o.id !== id);
+  document.getElementById('nb-orders').textContent = R.orders.length;
+  document.getElementById('hc-orders').textContent = R.orders.length;
+  renderOrders();
+}
+
 function renderOrders() {
   const el = document.getElementById('order-list');
   if(!R.orders.length){el.innerHTML='<div class="empty">No job orders yet.</div>';return;}
@@ -401,6 +476,7 @@ function renderOrders() {
         <button class="btn-outline" onclick="fillOutreach('','','${o.role.replace(/'/g,"\\'")}','${o.agency.replace(/'/g,"\\'")}','${o.location?o.location.replace(/'/g,"\\'"):''}','${o.payRate?o.payRate.replace(/'/g,"\\'"):''}')">Write Outreach</button>
         <button class="btn-outline" onclick="fillScreening('${o.role.replace(/'/g,"\\'")}','${o.requirements?o.requirements.replace(/'/g,"\\'"):''}','','${o.payRate?o.payRate.replace(/'/g,"\\'"):''}')">Screening Kit</button>
         ${o.contactEmail?`<a href="mailto:${o.contactEmail}" style="font-size:11px;color:var(--cyan);text-decoration:none;">${o.contactEmail}</a>`:''}
+        <button class="btn-ghost" onclick="removeOrder('${o.id}')">× Remove</button>
       </div>
     </div>`;
   }).join('');
